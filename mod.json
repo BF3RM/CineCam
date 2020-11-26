@@ -1,0 +1,9 @@
+{
+	"Name": "CineCam",
+	"Authors": ["Powback"],
+	"Description": "Cinematic Camera",
+	"URL": "",
+	"Version": "0",
+	"HasWebUI": false,
+	"HasVeniceEXT": true
+}
