@@ -20,10 +20,22 @@ function CineCam:__init()
 
 	Events:Subscribe('Client:UpdateInput', self, self.OnUpdateInput) 
 	Events:Subscribe('UpdateManager:Update', self, self.OnUpdate)
+	Events:Subscribe('Level:Destroy', self, self.OnLevelDestroyed)
+
 	self:RegisterVars()
 end
 
+function CineCam:OnLevelDestroyed()
+	self:Destroy()
+	self:ResetVars()
+end
+
+
 function CineCam:RegisterVars()
+	self:ResetVars()
+end
+
+function CineCam:ResetVars()
 	self.m_Mode = CameraMode.FirstPerson
 
 	self.m_Camera = nil
@@ -56,8 +68,9 @@ function CineCam:RegisterVars()
 	self.m_Playing = false
 
 	self.m_PlaybackKey = 1
-	self.finalSpeed = 1
+	self.m_FinalSpeed = 1
 end
+
 
 function CineCam:OnCreateChatMessage(p_Hook, p_Message, p_Channel, p_PlayerId, p_RecipientMask, p_SenderIsDead)
 	if self.m_Mode ~= CameraMode.CineCam then
@@ -194,6 +207,14 @@ function CineCam:Create()
 	self.m_CameraData.transform = ClientUtils:GetCameraTransform()
 	self.m_Camera = s_Entity
 	self.m_Rotation = self.m_CameraData.transform:ToQuatTransform(false)
+end
+
+function CineCam:Destroy()
+	if self.m_Camera then
+		self.m_Camera:Destroy()
+		self.m_Camera = nil
+	end
+	self.m_CameraData = nil
 end
 
 function CineCam:TakeControl()
@@ -422,9 +443,9 @@ function CineCam:UpdateCineCamera(p_Delta)
 
 	else
 		s_Transform = self.m_CameraData.transform:ToQuatTransform(false)
-		local s_NewRotation = s_Transform.rotation:Slerp(self.m_Rotation.rotation, (p_Delta / self.finalSpeed) * self.m_RotationSpeedMultiplier)
+		local s_NewRotation = s_Transform.rotation:Slerp(self.m_Rotation.rotation, (p_Delta / self.m_FinalSpeed) * self.m_RotationSpeedMultiplier)
 		if (self.m_Playing) then
-			s_NewRotation = s_Transform.rotation:Slerp(points[self.m_PlaybackKey].rotation, p_Delta / self.finalSpeed)
+			s_NewRotation = s_Transform.rotation:Slerp(points[self.m_PlaybackKey].rotation, p_Delta / self.m_FinalSpeed)
 		end
 		s_Transform.rotation = s_NewRotation
 		s_Transform = s_Transform:ToLinearTransform(false)
@@ -432,7 +453,7 @@ function CineCam:UpdateCineCamera(p_Delta)
 	end
 	if self.m_Playing then
 		local destinationTransform = points[self.m_PlaybackKey].transAndScale
-		self.m_CameraData.transform.trans:Lerp(Vec3(destinationTransform.x, destinationTransform.y, destinationTransform.z), p_Delta / self.finalSpeed)
+		self.m_CameraData.transform.trans:Lerp(Vec3(destinationTransform.x, destinationTransform.y, destinationTransform.z), p_Delta / self.m_FinalSpeed)
 	end
 	if self.m_IsAttached then
 		self.m_CameraData.transform.trans:Lerp(s_Transform.trans + self.m_PosIncrease, 1)
@@ -445,7 +466,7 @@ function CineCam:UpdateCineCamera(p_Delta)
 		end
 
 		local s_MoveVector = Vec3(s_Transform.left.x * s_MoveX, s_Transform.left.y * s_MoveX, s_Transform.left.z * s_MoveX)
-		self.m_CameraData.transform.trans:Lerp(s_Transform.trans + s_MoveVector, p_Delta / self.finalSpeed)
+		self.m_CameraData.transform.trans:Lerp(s_Transform.trans + s_MoveVector, p_Delta / self.m_FinalSpeed)
 	end
 
 	if self.m_MoveY ~= 0.0 then
@@ -456,7 +477,7 @@ function CineCam:UpdateCineCamera(p_Delta)
 		end
 
 		local s_MoveVector = Vec3(s_Transform.up.x * s_MoveY, s_Transform.up.y * s_MoveY, s_Transform.up.z * s_MoveY)
-		self.m_CameraData.transform.trans:Lerp(s_Transform.trans + s_MoveVector, p_Delta / self.finalSpeed)
+		self.m_CameraData.transform.trans:Lerp(s_Transform.trans + s_MoveVector, p_Delta / self.m_FinalSpeed)
 	end
 
 	if self.m_MoveZ ~= 0.0 then
@@ -467,7 +488,7 @@ function CineCam:UpdateCineCamera(p_Delta)
 		end
 
 		local s_MoveVector = Vec3(s_Transform.forward.x * s_MoveZ, s_Transform.forward.y * s_MoveZ, s_Transform.forward.z * s_MoveZ)
-		self.m_CameraData.transform.trans:Lerp(s_Transform.trans + s_MoveVector, p_Delta / self.finalSpeed)
+		self.m_CameraData.transform.trans:Lerp(s_Transform.trans + s_MoveVector, p_Delta / self.m_FinalSpeed)
 	end	
 end
 
