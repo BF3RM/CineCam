@@ -15,7 +15,7 @@ CameraMode = {
 
 function CineCam:__init()
 	print("Initializing CineCam module")
-	Hooks:Install('UI:CreateChatMessage', 999, self, self.OnCreateChatMessage) 
+	Hooks:Install('UI:CreateChatMessage', 1000, self, self.OnCreateChatMessage) 
 	Hooks:Install('Input:PreUpdate', 999, self, self.OnUpdateInputHook)
 
 	Events:Subscribe('Client:UpdateInput', self, self.OnUpdateInput) 
