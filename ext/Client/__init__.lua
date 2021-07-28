@@ -230,6 +230,8 @@ function CineCam:ReleaseControl()
 end
 
 function CineCam:Enable()
+	NetEvents:SendLocal('SetInputRestriction', true)
+
 	if(self.m_Camera == nil) then
 		self:Create()
 	end
@@ -243,6 +245,8 @@ function CineCam:Enable()
 end
 
 function CineCam:Disable()
+	NetEvents:SendLocal('SetInputRestriction', false)
+
 	self.m_LastTransform = self.m_CameraData.transform
     self:SetCameraMode(CameraMode.FirstPerson)
 	self:ReleaseControl()
@@ -426,6 +430,7 @@ end
 function CineCam:ToVec3(inp)
 	return Vec3(inp.x, inp.y, inp.z)
 end
+
 function CineCam:UpdateCineCamera(p_Delta)
 	local s_Transform = self.m_CameraData.transform
 	local distance = 1
