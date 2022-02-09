@@ -1,4 +1,5 @@
-class "Logger"
+---@class Logger
+Logger = class "Logger"
 
 function Logger:__init(p_ClassName, p_ActivateLogging)
 	if type(p_ClassName) ~= "string" then
@@ -15,11 +16,11 @@ function Logger:__init(p_ClassName, p_ActivateLogging)
 end
 
 function Logger:Write(p_Message)
-	if not RM_DEV.LOGGER_ENABLED then
+	if not Config.LOGGER_ENABLED then
 		return
 	end
 
-	if RM_DEV.LOGGER_PRINT_ALL == true and self.className ~= nil then
+	if Config.LOGGER_PRINT_ALL == true and self.className ~= nil then
 		goto continue
 
 	elseif self.debug == false or
@@ -34,11 +35,11 @@ function Logger:Write(p_Message)
 end
 
 function Logger:WriteTable(p_Table)
-	if not RM_DEV.LOGGER_ENABLED then
+	if not Config.LOGGER_ENABLED then
 		return
 	end
 
-    if RM_DEV.LOGGER_PRINT_ALL == true and self.className ~= nil then
+    if Config.LOGGER_PRINT_ALL == true and self.className ~= nil then
         goto continue
 
     elseif self.debug == false or
@@ -66,7 +67,7 @@ function Logger:Error(p_Message)
 		return
 	end
 
-	error("["..self.className.."] " .. tostring(p_Message))
+	error("["..self.className.."] " .. tostring(p_Message) .. " ")
 end
 
 return Logger
