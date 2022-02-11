@@ -1,0 +1,10 @@
+.idea/
+*.vuic
+WebUI/dist/*
+WebUI/node_modules/*
+.vs
+node_modules/*
+.vu/*
+ext/Client/.vu/*
+ext/Shared/.vu/*
+ext/Server/.vu/*
