@@ -272,9 +272,15 @@ function CineCam:OnUpdateInputHook(p_HookCtx, p_Cache, p_DeltaTime)
 		local x = p_Cache:GetLevel(InputConceptIdentifiers.ConceptYaw) * self.m_RotationSpeedMultiplier
 		local y = p_Cache:GetLevel(InputConceptIdentifiers.ConceptPitch) * self.m_RotationSpeedMultiplier
 
+		local s_Tickrate = 1.0 / p_DeltaTime
+		local s_TickrateMultiplier = s_Tickrate / 30.0
+
+		x = x / s_TickrateMultiplier
+		y = y / s_TickrateMultiplier
+
 		if self.m_Smooth then
-			x = x * 0.15
-			y = y * 0.15
+			x = x * 0.60
+			y = y * 0.60
 		end
 
 		self.m_CameraYaw   = self.m_CameraYaw - x
