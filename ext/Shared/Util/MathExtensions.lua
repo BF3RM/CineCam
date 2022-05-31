@@ -5,3 +5,4 @@ function Vec3:Lerp(to, t)
 	self.z = MathUtils:Lerp(from.z, to.z, t)
 	return self
 end
+
