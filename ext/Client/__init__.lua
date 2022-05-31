@@ -482,7 +482,7 @@ function CineCam:OnUpdateInput(p_DeltaTime)
 end
 
 function CineCam:OnUpdatePlayerInput(p_Player, p_DeltaTime)
-	m_VehicleCameras:UpdateCameras(p_Player, p_DeltaTime)
+	m_VehicleCameras:OnUpdatePlayerInput(p_Player, p_DeltaTime)
 end
 
 ---@param p_DeltaTime number
@@ -492,6 +492,9 @@ function CineCam:OnUpdate(p_DeltaTime, p_UpdatePass)
 	if p_UpdatePass ~= UpdatePass.UpdatePass_PreFrame then
 		return
 	end
+
+	-- route
+	m_VehicleCameras:OnUpdate(p_DeltaTime)
 
 	if self.m_Mode ~= CameraMode.CineCam then
 		return
