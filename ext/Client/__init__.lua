@@ -15,6 +15,9 @@ local m_RotationHelper = require "__shared/Util/RotationHelper"
 ---@type VehicleCameras
 local m_VehicleCameras = require "VehicleCameras"
 
+---@type WeaponCameras
+local m_WeaponCameras = require "WeaponCameras"
+
 local points = require "pointrenderer"
 
 ---@class CameraMode
@@ -483,6 +486,7 @@ end
 
 function CineCam:OnUpdatePlayerInput(p_Player, p_DeltaTime)
 	m_VehicleCameras:OnUpdatePlayerInput(p_Player, p_DeltaTime)
+	m_WeaponCameras:OnUpdatePlayerInput(p_Player, p_DeltaTime)
 end
 
 ---@param p_DeltaTime number
@@ -495,6 +499,7 @@ function CineCam:OnUpdate(p_DeltaTime, p_UpdatePass)
 
 	-- route
 	m_VehicleCameras:OnUpdate(p_DeltaTime)
+	m_WeaponCameras:OnUpdate(p_DeltaTime)
 
 	if self.m_Mode ~= CameraMode.CineCam then
 		return
