@@ -12,6 +12,9 @@ local m_Logger = Logger("CineCam", false)
 ---@type RotationHelper
 local m_RotationHelper = require "__shared/Util/RotationHelper"
 
+---@type VehicleCameras
+local m_VehicleCameras = require "VehicleCameras"
+
 local points = require "pointrenderer"
 
 ---@class CameraMode
@@ -51,6 +54,7 @@ function CineCam:__init()
 	Hooks:Install('Input:PreUpdate', 999, self, self.OnUpdateInputHook)
 
 	Events:Subscribe('Client:UpdateInput', self, self.OnUpdateInput)
+	Events:Subscribe('Player:UpdateInput', self, self.OnUpdatePlayerInput)
 	Events:Subscribe('UpdateManager:Update', self, self.OnUpdate)
 	Events:Subscribe('Level:Destroy', self, self.OnLevelDestroyed)
 	Events:Subscribe('Extension:Unloading', self, self.OnExtensionUnloading)
@@ -475,6 +479,10 @@ function CineCam:OnUpdateInput(p_DeltaTime)
 		self.m_ThirdPersonRotY = 0.0
 		self:DetachCameraFromPlayer()
 	end
+end
+
+function CineCam:OnUpdatePlayerInput(p_Player, p_DeltaTime)
+	m_VehicleCameras:UpdateCameras(p_Player, p_DeltaTime)
 end
 
 ---@param p_DeltaTime number
