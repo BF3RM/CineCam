@@ -78,20 +78,48 @@ function VehicleCameras:OnUpdate(p_DeltaTime)
 
         local s_OffsetLT = LinearTransform()
         local s_OffsetTrans = Vec3()
+        local s_OffsetTransLR = Vec3()
+        local s_OffsetTransFB = Vec3()
+        local s_OffsetTransUD = Vec3()
 
+        --LR
         if InputManager:IsKeyDown(InputDeviceKeys.IDK_ArrowLeft) then
-            s_OffsetTrans = Vec3(self.m_MoveSteps, 0, 0)
+            if self.m_Inversed then
+                s_OffsetTransLR = Vec3(-self.m_MoveSteps, 0, 0)
+            else
+                s_OffsetTransLR = Vec3(self.m_MoveSteps, 0, 0)
+            end
         elseif InputManager:IsKeyDown(InputDeviceKeys.IDK_ArrowRight) then
-            s_OffsetTrans = Vec3(-self.m_MoveSteps, 0, 0)
-        elseif InputManager:IsKeyDown(InputDeviceKeys.IDK_ArrowUp) then
-            s_OffsetTrans = Vec3(0, 0, self.m_MoveSteps)
-        elseif InputManager:IsKeyDown(InputDeviceKeys.IDK_ArrowDown) then
-            s_OffsetTrans = Vec3(0, 0, -self.m_MoveSteps)
-        elseif InputManager:IsKeyDown(InputDeviceKeys.IDK_Space) then
-            s_OffsetTrans = Vec3(0, self.m_MoveSteps, 0)
-        elseif InputManager:IsKeyDown(InputDeviceKeys.IDK_LeftCtrl) then
-            s_OffsetTrans = Vec3(0, -self.m_MoveSteps, 0)
+            if self.m_Inversed then
+                s_OffsetTransLR = Vec3(self.m_MoveSteps, 0, 0)
+            else
+                s_OffsetTransLR = Vec3(-self.m_MoveSteps, 0, 0)
+            end
         end
+
+        --FB
+        if InputManager:IsKeyDown(InputDeviceKeys.IDK_ArrowUp) then
+            if self.m_Inversed then
+                s_OffsetTransFB = Vec3(0, 0, -self.m_MoveSteps)
+            else
+                s_OffsetTransFB = Vec3(0, 0, self.m_MoveSteps)
+            end
+        elseif InputManager:IsKeyDown(InputDeviceKeys.IDK_ArrowDown) then
+            if self.m_Inversed then
+                s_OffsetTransFB = Vec3(0, 0, self.m_MoveSteps)
+            else
+                s_OffsetTransFB = Vec3(0, 0, -self.m_MoveSteps)
+            end
+        end
+
+        --UD
+        if InputManager:IsKeyDown(InputDeviceKeys.IDK_Space) then
+            s_OffsetTransUD = Vec3(0, self.m_MoveSteps, 0)
+        elseif InputManager:IsKeyDown(InputDeviceKeys.IDK_LeftCtrl) then
+            s_OffsetTransUD = Vec3(0, -self.m_MoveSteps, 0)
+        end
+
+        s_OffsetTrans = s_OffsetTransLR + s_OffsetTransFB + s_OffsetTransUD
 
         if self.m_Inversed then
             s_VehicleTransform.forward = s_VehicleTransform.forward * (-1)
