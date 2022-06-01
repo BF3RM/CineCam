@@ -22,6 +22,16 @@ function WeaponCameras:ResetVars()
     self.m_Inversed = false
 end
 
+function WeaponCameras:OnLevelDestroyed()
+    self:Disable()
+    self:ResetVars()
+end
+
+function WeaponCameras:OnExtensionUnloading()
+    self:Disable()
+    self:ResetVars()
+end
+
 function WeaponCameras:CreateCameraAndTakeControl(p_Transform)
 	if self.m_CameraData == nil then
 		self.m_CameraData = CameraEntityData()
@@ -36,11 +46,20 @@ function WeaponCameras:CreateCameraAndTakeControl(p_Transform)
 
 	s_Entity:Init(Realm.Realm_Client, true)
 
-	-- local s_Spatial = SpatialEntity(s_Entity)
-	self.m_CameraData.fov = 60
+	-- higher fov because gopro style mby?
+	self.m_CameraData.fov = 80
 	self.m_CameraData.transform = p_Transform
     self.m_ActiveCamera = s_Entity
     self.m_ActiveCamera:FireEvent('TakeControl')
+end
+
+function WeaponCameras:Disable()
+    self.m_Enabled = false
+    if self.m_ActiveCamera ~= nil then
+        self.m_ActiveCamera:FireEvent('ReleaseControl')
+        self.m_ActiveCamera:Destroy()
+        self.m_ActiveCamera = nil
+    end
 end
 
 function WeaponCameras:OnUpdatePlayerInput(p_Player, p_DeltaTime)
@@ -54,10 +73,7 @@ function WeaponCameras:OnUpdatePlayerInput(p_Player, p_DeltaTime)
             local s_Transform = self.m_Player.soldier.worldTransform
             self:CreateCameraAndTakeControl(s_Transform)
         elseif self.m_Enabled then
-            self.m_Enabled = false
-            self.m_ActiveCamera:FireEvent('ReleaseControl')
-            self.m_ActiveCamera:Destroy()
-            self.m_ActiveCamera = nil
+            self:Disable()
         end
     end
 
@@ -81,54 +97,45 @@ function WeaponCameras:OnUpdate(p_DeltaTime)
 
         --LR
         if InputManager:IsKeyDown(InputDeviceKeys.IDK_ArrowLeft) then
-            if self.m_Inversed then
-                s_OffsetTransLR = Vec3(-self.m_MoveSteps, 0, 0)
-            else
-                s_OffsetTransLR = Vec3(self.m_MoveSteps, 0, 0)
-            end
+            s_OffsetTransLR = Vec3(-self.m_MoveSteps, 0, 0)
         elseif InputManager:IsKeyDown(InputDeviceKeys.IDK_ArrowRight) then
-            if self.m_Inversed then
-                s_OffsetTransLR = Vec3(self.m_MoveSteps, 0, 0)
-            else
-                s_OffsetTransLR = Vec3(-self.m_MoveSteps, 0, 0)
-            end
+            s_OffsetTransLR = Vec3(self.m_MoveSteps, 0, 0)
         end
 
         --FB
         if InputManager:IsKeyDown(InputDeviceKeys.IDK_ArrowUp) then
-            if self.m_Inversed then
-                s_OffsetTransFB = Vec3(0, 0, -self.m_MoveSteps)
-            else
-                s_OffsetTransFB = Vec3(0, 0, self.m_MoveSteps)
-            end
+            s_OffsetTransFB = Vec3(0, self.m_MoveSteps, 0)
         elseif InputManager:IsKeyDown(InputDeviceKeys.IDK_ArrowDown) then
-            if self.m_Inversed then
-                s_OffsetTransFB = Vec3(0, 0, self.m_MoveSteps)
-            else
-                s_OffsetTransFB = Vec3(0, 0, -self.m_MoveSteps)
-            end
+            s_OffsetTransFB = Vec3(0, -self.m_MoveSteps, 0)
         end
 
         --UD
         if InputManager:IsKeyDown(InputDeviceKeys.IDK_Space) then
-            s_OffsetTransUD = Vec3(0, self.m_MoveSteps, 0)
+            s_OffsetTransUD = Vec3(0, 0, self.m_MoveSteps)
         elseif InputManager:IsKeyDown(InputDeviceKeys.IDK_LeftCtrl) then
-            s_OffsetTransUD = Vec3(0, -self.m_MoveSteps, 0)
+            s_OffsetTransUD = Vec3(0, 0, -self.m_MoveSteps)
         end
 
         s_OffsetTrans = s_OffsetTransLR + s_OffsetTransFB + s_OffsetTransUD
 
-        local s_SoldierTransform = self.m_Player.soldier.worldTransform
         local s_WeaponTransform = self.m_Player.soldier.weaponsComponent.weaponTransform
 
+        self.m_CurrentOffset = self.m_CurrentOffset + s_OffsetTrans
+        -- correct weapon transform leveling
+        s_OffsetLT.left = Vec3(1, 0, 0)
+        s_OffsetLT.up = Vec3(0, 0, 1)
+        s_OffsetLT.forward = Vec3(0, -1, 0)
+        s_OffsetLT.trans = self.m_CurrentOffset
+        -- correct ypr
+        local s_CorrectionTransform = MathUtils:GetTransformFromYPR(math.pi, math.pi/0.91, math.pi/2)
+
         if self.m_Inversed then
-            s_SoldierTransform.forward = self.m_Player.soldier.worldTransform.forward * (-1)
-            s_SoldierTransform.left = self.m_Player.soldier.worldTransform.left * (-1)
+            s_WeaponTransform.forward = s_WeaponTransform.forward * (-1)
+            s_WeaponTransform.left = s_WeaponTransform.left * (-1)
+            s_CorrectionTransform = MathUtils:GetTransformFromYPR(math.pi, math.pi/0.53, math.pi/2)
         end
 
-        self.m_CurrentOffset = self.m_CurrentOffset + s_OffsetTrans
-        s_OffsetLT.trans = self.m_CurrentOffset
-        self.m_CameraData.transform = s_OffsetLT * s_SoldierTransform --[[* s_WeaponTransform]]
+        self.m_CameraData.transform = s_OffsetLT * s_CorrectionTransform * s_WeaponTransform
     end
 end
 

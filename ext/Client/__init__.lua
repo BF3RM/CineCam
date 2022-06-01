@@ -73,6 +73,8 @@ function CineCam:OnLevelDestroyed()
 
 	self:Destroy()
 	self:ResetVars()
+	m_VehicleCameras:OnLevelDestroyed()
+	m_WeaponCameras:OnLevelDestroyed()
 end
 
 function CineCam:OnExtensionUnloading()
@@ -82,6 +84,8 @@ function CineCam:OnExtensionUnloading()
 
 	self:Destroy()
 	self:ResetVars()
+	m_VehicleCameras:OnExtensionUnloading()
+	m_WeaponCameras:OnLevelDestroyed()
 end
 
 function CineCam:RegisterVars()
@@ -144,6 +148,8 @@ function CineCam:OnSoldierHealthAction(p_Soldier, p_Action)
 	if s_LocalPlayer.corpse == p_Soldier then
 		m_Logger:Write("You died.")
 		self:Disable()
+		m_VehicleCameras:Disable()
+		m_WeaponCameras:Disable()
 	end
 end
 

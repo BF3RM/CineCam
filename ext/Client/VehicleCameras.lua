@@ -22,6 +22,16 @@ function VehicleCameras:ResetVars()
     self.m_Inversed = false
 end
 
+function VehicleCameras:OnLevelDestroyed()
+    self:Disable()
+    self:ResetVars()
+end
+
+function VehicleCameras:OnExtensionUnloading()
+    self:Disable()
+    self:ResetVars()
+end
+
 function VehicleCameras:CreateCameraAndTakeControl(p_Transform)
 	if self.m_CameraData == nil then
 		self.m_CameraData = CameraEntityData()
@@ -43,6 +53,15 @@ function VehicleCameras:CreateCameraAndTakeControl(p_Transform)
     self.m_ActiveCamera:FireEvent('TakeControl')
 end
 
+function VehicleCameras:Disable()
+    self.m_Enabled = false
+    if self.m_ActiveCamera ~= nil then
+        self.m_ActiveCamera:FireEvent('ReleaseControl')
+        self.m_ActiveCamera:Destroy()
+        self.m_ActiveCamera = nil
+    end
+end
+
 function VehicleCameras:OnUpdatePlayerInput(p_Player, p_DeltaTime)
     if self.m_Player == nil then
         self.m_Player = p_Player
@@ -55,9 +74,7 @@ function VehicleCameras:OnUpdatePlayerInput(p_Player, p_DeltaTime)
             local s_Transform = SpatialEntity(s_Vehicle).transform
             self:CreateCameraAndTakeControl(s_Transform)
         elseif self.m_Enabled then
-            self.m_Enabled = false
-            self.m_ActiveCamera:FireEvent('ReleaseControl')
-            self.m_ActiveCamera:Destroy()
+            self:Disable()
         end
     end
 
