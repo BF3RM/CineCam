@@ -73,9 +73,6 @@ function VehicleCameras:OnUpdate(p_DeltaTime)
     end
 
     if self.m_Enabled then
-        local s_Vehicle = self.m_Player.controlledControllable
-        local s_VehicleTransform = SpatialEntity(s_Vehicle).transform
-
         local s_OffsetLT = LinearTransform()
         local s_OffsetTrans = Vec3()
         local s_OffsetTransLR = Vec3()
@@ -120,6 +117,9 @@ function VehicleCameras:OnUpdate(p_DeltaTime)
         end
 
         s_OffsetTrans = s_OffsetTransLR + s_OffsetTransFB + s_OffsetTransUD
+
+        local s_Vehicle = self.m_Player.controlledControllable
+        local s_VehicleTransform = SpatialEntity(s_Vehicle).transform
 
         if self.m_Inversed then
             s_VehicleTransform.forward = s_VehicleTransform.forward * (-1)

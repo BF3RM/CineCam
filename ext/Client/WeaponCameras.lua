@@ -51,12 +51,13 @@ function WeaponCameras:OnUpdatePlayerInput(p_Player, p_DeltaTime)
     if InputManager:WentKeyDown(InputDeviceKeys.IDK_C) then
         if not self.m_Player.inVehicle and self.m_Player.soldier ~= nil and not self.m_Enabled then
             self.m_Enabled = true
-            local s_Transform = self.m_Player.soldier.weaponsComponent.weaponTransform
+            local s_Transform = self.m_Player.soldier.worldTransform
             self:CreateCameraAndTakeControl(s_Transform)
         elseif self.m_Enabled then
             self.m_Enabled = false
             self.m_ActiveCamera:FireEvent('ReleaseControl')
             self.m_ActiveCamera:Destroy()
+            self.m_ActiveCamera = nil
         end
     end
 
@@ -72,8 +73,6 @@ function WeaponCameras:OnUpdate(p_DeltaTime)
     end
 
     if self.m_Enabled then
-        local s_WeaponTransform = self.m_Player.soldier.weaponsComponent.weaponTransform
-
         local s_OffsetLT = LinearTransform()
         local s_OffsetTrans = Vec3()
         local s_OffsetTransLR = Vec3()
@@ -119,24 +118,17 @@ function WeaponCameras:OnUpdate(p_DeltaTime)
 
         s_OffsetTrans = s_OffsetTransLR + s_OffsetTransFB + s_OffsetTransUD
 
+        local s_SoldierTransform = self.m_Player.soldier.worldTransform
+        local s_WeaponTransform = self.m_Player.soldier.weaponsComponent.weaponTransform
+
         if self.m_Inversed then
-            s_WeaponTransform.forward = s_WeaponTransform.forward * (-1)
-            s_WeaponTransform.left = s_WeaponTransform.left * (-1)
+            s_SoldierTransform.forward = self.m_Player.soldier.worldTransform.forward * (-1)
+            s_SoldierTransform.left = self.m_Player.soldier.worldTransform.left * (-1)
         end
-
-
-        local yaw, pitch, roll = RotationHelper:GetYPRFromLT(s_WeaponTransform)
-        -- yaw = yaw - math.pi / 2
-        -- pitch = pitch - math.pi / 2
-        -- roll = roll - math.pi / 2
-        local left, up, forward = RotationHelper:GetLUFFromYPR(yaw, pitch, roll)
-        s_WeaponTransform.forward = forward
-        s_WeaponTransform.up = up
-        s_WeaponTransform.left = left
 
         self.m_CurrentOffset = self.m_CurrentOffset + s_OffsetTrans
         s_OffsetLT.trans = self.m_CurrentOffset
-        self.m_CameraData.transform = s_OffsetLT * s_WeaponTransform
+        self.m_CameraData.transform = s_OffsetLT * s_SoldierTransform --[[* s_WeaponTransform]]
     end
 end
 
