@@ -1,18 +1,18 @@
----@class WeaponCameras
-WeaponCameras = class 'WeaponCameras'
+---@class SoldierCameras
+SoldierCameras = class 'SoldierCameras'
 
 ---@type Logger
-local m_Logger = Logger('WeaponCameras', false)
+local m_Logger = Logger('SoldierCameras', false)
 
-function WeaponCameras:__init()
+function SoldierCameras:__init()
     self:RegisterVars()
 end
 
-function WeaponCameras:RegisterVars()
+function SoldierCameras:RegisterVars()
     self:ResetVars()
 end
 
-function WeaponCameras:ResetVars()
+function SoldierCameras:ResetVars()
     self.m_Enabled = false
     self.m_CameraData = nil
     self.m_ActiveCamera = nil
@@ -20,19 +20,20 @@ function WeaponCameras:ResetVars()
     self.m_CurrentOffset = Vec3(0, 0, 0)
     self.m_Player = nil
     self.m_Inversed = false
+    self.m_Detached = false
 end
 
-function WeaponCameras:OnLevelDestroyed()
+function SoldierCameras:OnLevelDestroyed()
     self:Disable()
     self:ResetVars()
 end
 
-function WeaponCameras:OnExtensionUnloading()
+function SoldierCameras:OnExtensionUnloading()
     self:Disable()
     self:ResetVars()
 end
 
-function WeaponCameras:CreateCameraAndTakeControl(p_Transform)
+function SoldierCameras:CreateCameraAndTakeControl(p_Transform)
 	if self.m_CameraData == nil then
 		self.m_CameraData = CameraEntityData()
 	end
@@ -47,13 +48,13 @@ function WeaponCameras:CreateCameraAndTakeControl(p_Transform)
 	s_Entity:Init(Realm.Realm_Client, true)
 
 	-- higher fov because gopro style mby?
-	self.m_CameraData.fov = 80
+	self.m_CameraData.fov = 60
 	self.m_CameraData.transform = p_Transform
     self.m_ActiveCamera = s_Entity
     self.m_ActiveCamera:FireEvent('TakeControl')
 end
 
-function WeaponCameras:Disable()
+function SoldierCameras:Disable()
     self.m_Enabled = false
     if self.m_ActiveCamera ~= nil then
         self.m_ActiveCamera:FireEvent('ReleaseControl')
@@ -62,7 +63,7 @@ function WeaponCameras:Disable()
     end
 end
 
-function WeaponCameras:OnUpdatePlayerInput(p_Player, p_DeltaTime)
+function SoldierCameras:OnUpdatePlayerInput(p_Player, p_DeltaTime)
     if self.m_Player == nil then
         self.m_Player = p_Player
     end
@@ -89,7 +90,7 @@ function WeaponCameras:OnUpdatePlayerInput(p_Player, p_DeltaTime)
     end
 end
 
-function WeaponCameras:OnUpdate(p_DeltaTime)
+function SoldierCameras:OnUpdate(p_DeltaTime)
     if self.m_Player == nil then
         self.m_Enabled = false
     end
@@ -114,39 +115,32 @@ function WeaponCameras:OnUpdate(p_DeltaTime)
 
         --FB
         if InputManager:IsKeyDown(InputDeviceKeys.IDK_ArrowUp) then
-            s_OffsetTransFB = Vec3(0, self.m_MoveSteps, 0)
+            s_OffsetTransFB = Vec3(0, 0, -self.m_MoveSteps)
         elseif InputManager:IsKeyDown(InputDeviceKeys.IDK_ArrowDown) then
-            s_OffsetTransFB = Vec3(0, -self.m_MoveSteps, 0)
+            s_OffsetTransFB = Vec3(0, 0, self.m_MoveSteps)
         end
 
         --UD
         if InputManager:IsKeyDown(InputDeviceKeys.IDK_Space) then
-            s_OffsetTransUD = Vec3(0, 0, self.m_MoveSteps)
+            s_OffsetTransUD = Vec3(0, self.m_MoveSteps, 0)
         elseif InputManager:IsKeyDown(InputDeviceKeys.IDK_LeftCtrl) then
-            s_OffsetTransUD = Vec3(0, 0, -self.m_MoveSteps)
+            s_OffsetTransUD = Vec3(0, -self.m_MoveSteps, 0)
         end
 
         s_OffsetTrans = s_OffsetTransLR + s_OffsetTransFB + s_OffsetTransUD
 
-        local s_WeaponTransform = self.m_Player.soldier.weaponsComponent.weaponTransform
+        local s_SoldierTransform = self.m_Player.soldier.worldTransform
 
         self.m_CurrentOffset = self.m_CurrentOffset + s_OffsetTrans
-        -- correct weapon transform leveling
-        s_OffsetLT.left = Vec3(1, 0, 0)
-        s_OffsetLT.up = Vec3(0, 0, 1)
-        s_OffsetLT.forward = Vec3(0, -1, 0)
         s_OffsetLT.trans = self.m_CurrentOffset
-        -- correct ypr
-        local s_CorrectionTransform = MathUtils:GetTransformFromYPR(math.pi, math.pi/0.91, math.pi/2)
 
         if self.m_Inversed then
-            s_WeaponTransform.forward = s_WeaponTransform.forward * (-1)
-            s_WeaponTransform.left = s_WeaponTransform.left * (-1)
-            s_CorrectionTransform = MathUtils:GetTransformFromYPR(math.pi, math.pi/0.53, math.pi/2)
+            s_SoldierTransform.forward = s_SoldierTransform.forward * (-1)
+            s_SoldierTransform.left = s_SoldierTransform.left * (-1)
         end
 
-        self.m_CameraData.transform = s_OffsetLT * s_CorrectionTransform * s_WeaponTransform
+        self.m_CameraData.transform = s_OffsetLT * s_SoldierTransform
     end
 end
 
-return WeaponCameras()
+return SoldierCameras()

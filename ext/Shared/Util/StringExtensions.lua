@@ -41,6 +41,10 @@ function string:firstToLower(str)
 	return (str:gsub("^%L", string.lower))
 end
 
+function string:firstToUpper(str)
+	return (str:gsub("^%U", string.upper))
+end
+
 function string:quote()
 	self = self:gsub('"', '\\"')
 	self = self:gsub("'", "\\'")

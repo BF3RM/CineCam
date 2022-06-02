@@ -18,6 +18,9 @@ local m_VehicleCameras = require "VehicleCameras"
 ---@type WeaponCameras
 local m_WeaponCameras = require "WeaponCameras"
 
+---@type SoldierCameras
+local m_SoldierCameras = require "SoldierCameras"
+
 local points = require "pointrenderer"
 
 ---@class CameraMode
@@ -25,7 +28,10 @@ local CameraMode = {
 	FirstPerson = 1,
 	CineCam = 2,
 	Orbital = 3,
-	Editor = 4
+	Editor = 4,
+	Soldier = 5,
+	Weapon = 6,
+	Vehicle = 7,
 }
 
 ---Returns the current FOV of the local player
@@ -75,6 +81,7 @@ function CineCam:OnLevelDestroyed()
 	self:ResetVars()
 	m_VehicleCameras:OnLevelDestroyed()
 	m_WeaponCameras:OnLevelDestroyed()
+	m_SoldierCameras:OnLevelDestroyed()
 end
 
 function CineCam:OnExtensionUnloading()
@@ -85,7 +92,8 @@ function CineCam:OnExtensionUnloading()
 	self:Destroy()
 	self:ResetVars()
 	m_VehicleCameras:OnExtensionUnloading()
-	m_WeaponCameras:OnLevelDestroyed()
+	m_WeaponCameras:OnExtensionUnloading()
+	m_SoldierCameras:OnExtensionUnloading()
 end
 
 function CineCam:RegisterVars()
@@ -150,6 +158,7 @@ function CineCam:OnSoldierHealthAction(p_Soldier, p_Action)
 		self:Disable()
 		m_VehicleCameras:Disable()
 		m_WeaponCameras:Disable()
+		m_SoldierCameras:Disable()
 	end
 end
 
@@ -160,15 +169,29 @@ end
 ---@param p_RecipientMask integer
 ---@param p_SenderIsDead boolean
 function CineCam:OnCreateChatMessage(p_HookCtx, p_Message, p_Channel, p_PlayerId, p_RecipientMask, p_SenderIsDead)
-	if self.m_Mode ~= CameraMode.CineCam then
-		return
-	end
 
 	if p_PlayerId ~= PlayerManager:GetLocalPlayer().id then
 		return
 	end
 
+	-- listen to commands
 	local s_Parts = p_Message:split(' ')
+
+	-- switch mounted modes
+	if s_Parts[1]:lower() == '!mode' and CameraMode[string:firstToUpper(s_Parts[2])] ~= nil then
+		-- disable existing
+		m_VehicleCameras:Disable()
+		m_WeaponCameras:Disable()
+		m_SoldierCameras:Disable()
+
+		-- set new mode
+		self:SetCameraMode(CameraMode[string:firstToUpper(s_Parts[2])])
+		ChatManager:SendMessage('Set mounted camera mode to: ' .. string:firstToUpper(s_Parts[2]))
+	end
+
+	if self.m_Mode ~= CameraMode.CineCam then
+		return
+	end
 
 	if s_Parts[1]:lower() == '!attach' and s_Parts[2] ~= nil then
 		local s_Players = self:FindPlayersByString(s_Parts[2])
@@ -203,10 +226,6 @@ function CineCam:OnCreateChatMessage(p_HookCtx, p_Message, p_Channel, p_PlayerId
 		self.m_CameraData.transform.forward = self.m_CameraData.transform.forward * -1
 		self.m_CameraData.transform.up = Vec3(self.m_CameraData.transform.up.x * -1, self.m_CameraData.transform.up.y, self.m_CameraData.transform.up.z * -1)
 		self:UpdateCineCamVars()
-	end
-
-	if s_Parts[1]:lower() == '!detach' then
-		self:DetachCameraFromPlayer()
 	end
 end
 
@@ -491,8 +510,13 @@ function CineCam:OnUpdateInput(p_DeltaTime)
 end
 
 function CineCam:OnUpdatePlayerInput(p_Player, p_DeltaTime)
-	m_VehicleCameras:OnUpdatePlayerInput(p_Player, p_DeltaTime)
-	m_WeaponCameras:OnUpdatePlayerInput(p_Player, p_DeltaTime)
+	if self.m_Mode == CameraMode.Vehicle then
+		m_VehicleCameras:OnUpdatePlayerInput(p_Player, p_DeltaTime)
+	elseif self.m_Mode == CameraMode.Weapon then
+		m_WeaponCameras:OnUpdatePlayerInput(p_Player, p_DeltaTime)
+	elseif self.m_Mode == CameraMode.Soldier then
+		m_SoldierCameras:OnUpdatePlayerInput(p_Player, p_DeltaTime)
+	end
 end
 
 ---@param p_DeltaTime number
@@ -506,6 +530,7 @@ function CineCam:OnUpdate(p_DeltaTime, p_UpdatePass)
 	-- route
 	m_VehicleCameras:OnUpdate(p_DeltaTime)
 	m_WeaponCameras:OnUpdate(p_DeltaTime)
+	m_SoldierCameras:OnUpdate(p_DeltaTime)
 
 	if self.m_Mode ~= CameraMode.CineCam then
 		return
