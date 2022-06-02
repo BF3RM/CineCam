@@ -16,7 +16,6 @@ function VehicleCameras:ResetVars()
     self.m_Enabled = false
     self.m_CameraData = nil
     self.m_ActiveCamera = nil
-    self.m_MoveSteps = 0.05
     self.m_CurrentOffset = Vec3(0, 0, 0)
     self.m_CurrentRotationYaw = 0
     self.m_Player = nil
@@ -108,25 +107,31 @@ function VehicleCameras:OnUpdate(p_DeltaTime)
         local s_OffsetTransUD = Vec3()
         local s_RotationMatrix = LinearTransform()
 
+        local s_MoveSteps = Config.MOUNTED_CAMERA_MOVE_SPEED
+
+        if InputManager:IsKeyDown(InputDeviceKeys.IDK_LeftShift) then
+            s_MoveSteps = s_MoveSteps * Config.MOUNTED_CAMERA_BOOST_MULTIPLIER
+        end
+
         --LR
         if InputManager:IsKeyDown(InputDeviceKeys.IDK_ArrowLeft) then
-            s_OffsetTransLR = Vec3(-self.m_MoveSteps, 0, 0)
+            s_OffsetTransLR = Vec3(-s_MoveSteps, 0, 0)
         elseif InputManager:IsKeyDown(InputDeviceKeys.IDK_ArrowRight) then
-            s_OffsetTransLR = Vec3(self.m_MoveSteps, 0, 0)
+            s_OffsetTransLR = Vec3(s_MoveSteps, 0, 0)
         end
 
         --FB
         if InputManager:IsKeyDown(InputDeviceKeys.IDK_ArrowUp) then
-            s_OffsetTransFB = Vec3(0, 0, -self.m_MoveSteps)
+            s_OffsetTransFB = Vec3(0, 0, -s_MoveSteps)
         elseif InputManager:IsKeyDown(InputDeviceKeys.IDK_ArrowDown) then
-            s_OffsetTransFB = Vec3(0, 0, self.m_MoveSteps)
+            s_OffsetTransFB = Vec3(0, 0, s_MoveSteps)
         end
 
         --UD
         if InputManager:IsKeyDown(InputDeviceKeys.IDK_Space) then
-            s_OffsetTransUD = Vec3(0, self.m_MoveSteps, 0)
+            s_OffsetTransUD = Vec3(0, s_MoveSteps, 0)
         elseif InputManager:IsKeyDown(InputDeviceKeys.IDK_LeftCtrl) then
-            s_OffsetTransUD = Vec3(0, -self.m_MoveSteps, 0)
+            s_OffsetTransUD = Vec3(0, -s_MoveSteps, 0)
         end
 
         -- Apply Offset
