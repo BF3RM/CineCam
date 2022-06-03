@@ -7,7 +7,7 @@ require "__shared/Util/StringExtensions"
 require "__shared/Util/Logger"
 
 ---@type Logger
-local m_Logger = Logger("CineCam", false)
+local m_Logger = Logger("CineCam", true)
 
 ---@type RotationHelper
 local m_RotationHelper = require "__shared/Util/RotationHelper"
@@ -134,6 +134,8 @@ function CineCam:ResetVars()
 
 	self.m_PlaybackKey = 1
 	self.m_FinalSpeed = 1
+
+	self.m_WeaponLowered = false
 end
 
 ---@param p_Soldier SoldierEntity
@@ -187,6 +189,8 @@ function CineCam:OnCreateChatMessage(p_HookCtx, p_Message, p_Channel, p_PlayerId
 		-- set new mode
 		self:SetCameraMode(CameraMode[string:firstToUpper(s_Parts[2])])
 		ChatManager:SendMessage('Set mounted camera mode to: ' .. string:firstToUpper(s_Parts[2]))
+	elseif s_Parts[1]:lower() == '!lowerweapon' then
+		self:LowerWeapon()
 	end
 
 	if self.m_Mode ~= CameraMode.CineCam then
@@ -672,6 +676,16 @@ function CineCam:UpdateCineCamera(p_DeltaTime)
 
 		local s_MoveVector = Vec3(s_Transform.forward.x * s_MoveZ, s_Transform.forward.y * s_MoveZ, s_Transform.forward.z * s_MoveZ)
 		self.m_CameraData.transform.trans:Lerp(s_Transform.trans + s_MoveVector, p_DeltaTime / self.m_FinalSpeed)
+	end
+end
+
+function CineCam:LowerWeapon()
+	local s_Player = PlayerManager:GetLocalPlayer()
+	self.m_WeaponLowered = not self.m_WeaponLowered
+
+	if s_Player ~= nil then
+    	s_Player:EnableInput(EntryInputActionEnum.EIAFire, not self.m_WeaponLowered)
+		m_Logger:Write("Weapon lowered set to: " .. tostring(self.m_WeaponLowered))
 	end
 end
 
