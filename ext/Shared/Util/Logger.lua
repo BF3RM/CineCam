@@ -1,9 +1,10 @@
 ---@class Logger
+---@overload fun(p_ClassName: string, p_ActivateLogging: boolean):Logger
 Logger = class "Logger"
 
 function Logger:__init(p_ClassName, p_ActivateLogging)
 	if type(p_ClassName) ~= "string" then
-		error("Logger: Wrong arguments creating object, className is not a string. ClassName: "..tostring(p_ClassName))
+		error("Logger: Wrong arguments creating object, className is not a string. ClassName: " .. tostring(p_ClassName))
 		return
 	elseif type(p_ActivateLogging) ~= "boolean" then
 		error("Logger: Wrong arguments creating object, ActivateLogging is not a boolean. ActivateLogging: " ..tostring(p_ActivateLogging))
@@ -24,14 +25,13 @@ function Logger:Write(p_Message)
 		goto continue
 
 	elseif self.debug == false or
-		 self.debug == nil or
-		 self.className == nil then
+		self.debug == nil or
+		self.className == nil then
 		return
 	end
 
 	::continue::
-
-	print("["..self.className.."] " .. tostring(p_Message))
+	print("[" .. self.className .. "] " .. tostring(p_Message))
 end
 
 function Logger:WriteTable(p_Table)
@@ -39,19 +39,18 @@ function Logger:WriteTable(p_Table)
 		return
 	end
 
-    if Config.LOGGER_PRINT_ALL == true and self.className ~= nil then
-        goto continue
+	if Config.LOGGER_PRINT_ALL == true and self.className ~= nil then
+		goto continue
 
-    elseif self.debug == false or
-        self.debug == nil or
-        self.className == nil then
-        return
-    end
+	elseif self.debug == false or
+		self.debug == nil or
+		self.className == nil then
+		return
+	end
 
-    ::continue::
-
-    print("["..self.className.."] Table:")
-    print(p_Table)
+	::continue::
+	print("[" .. self.className .. "] Table:")
+	print(p_Table)
 end
 
 function Logger:Warning(p_Message)
@@ -59,7 +58,7 @@ function Logger:Warning(p_Message)
 		return
 	end
 
-	print("["..self.className.."] WARNING: " .. tostring(p_Message))
+	print("[" .. self.className .. "] WARNING: " .. tostring(p_Message))
 end
 
 function Logger:Error(p_Message)
@@ -67,7 +66,7 @@ function Logger:Error(p_Message)
 		return
 	end
 
-	error("["..self.className.."] " .. tostring(p_Message) .. " ")
+	error("[" .. self.className .. "] " .. tostring(p_Message) .. " ")
 end
 
 return Logger

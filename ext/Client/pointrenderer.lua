@@ -1,7 +1,6 @@
 local points = {
 }
 
----@type Logger
 local m_Logger = Logger("PointRenderer", false)
 
 local activeIndex = nil
@@ -10,7 +9,7 @@ local savedPosition = nil
 
 local closeLoop = false
 
-local center = ClientUtils:GetWindowSize()/2
+local center = ClientUtils:GetWindowSize() / 2
 
 local function getVertexForPoint(vec3)
 
@@ -27,41 +26,41 @@ local function appendVerticesForSegment(vertices, from, to)
 	to = to:ToLinearTransform()
 
 	-- Every segment is 2 triangles, each triangle is 3 points
-	vertices[i+1] = getVertexForPoint(from.trans)	-- ◩
-	vertices[i+2] = getVertexForPoint(from.trans + (from.forward * -1))
+	vertices[i + 1] = getVertexForPoint(from.trans) -- ◩
+	vertices[i + 2] = getVertexForPoint(from.trans + (from.forward * -1))
 	if not to then
 		return
 	end
-	vertices[i+3] = getVertexForPoint(to.trans + (to.forward * -1))
-	vertices[i+4] = getVertexForPoint(from.trans) -- ◪
-	vertices[i+5] = getVertexForPoint(to.trans)
-	vertices[i+6] = getVertexForPoint(to.trans + (to.forward * -1))
+	vertices[i + 3] = getVertexForPoint(to.trans + (to.forward * -1))
+	vertices[i + 4] = getVertexForPoint(from.trans) -- ◪
+	vertices[i + 5] = getVertexForPoint(to.trans)
+	vertices[i + 6] = getVertexForPoint(to.trans + (to.forward * -1))
 end
 
 local function printPointsAsVec3s()
-	m_Logger:Write("printing "..tostring(#points).." points")
+	m_Logger:Write("printing " .. tostring(#points) .. " points")
 
 	local result = "points = { "
 
 	for index, point in pairs(points) do
 
-		result = result.."Vec3"..tostring(point)..", "
+		result = result .. "Vec3" .. tostring(point) .. ", "
 	end
 
-	m_Logger:Write(result.."}")
+	m_Logger:Write(result .. "}")
 end
 
 local function printPointsAsVec2s()
-	m_Logger:Write("printing "..tostring(#points).." points")
+	m_Logger:Write("printing " .. tostring(#points) .. " points")
 
 	local result = "points = { "
 
 	for index, point in pairs(points) do
 
-		result = result.. tostring(point)..", "
+		result = result .. tostring(point) .. ", "
 	end
 
-	m_Logger:Write(result.."}")
+	m_Logger:Write(result .. "}")
 end
 
 Events:Subscribe('UI:DrawHud', function()
@@ -212,7 +211,7 @@ local function raycast()
 	local transform = ClientUtils:GetCameraTransform()
 	local direction = Vec3(-transform.forward.x, -transform.forward.y, -transform.forward.z)
 
-	if transform.trans == Vec3(0,0,0) then
+	if transform.trans == Vec3.zero then
 		return
 	end
 
@@ -301,11 +300,11 @@ Console:Register('load', '<Guid> load points from existing VolumeVectorShapeData
 end)
 
 Console:Register('help', 'show usage info', function(args)
-	print("\nPress F5 to start/stop placing\n"..
-		"Press E to confirm position or select a previous point\n"..
-		"Press F4 to delete a point/all points if none are selected\n"..
-		"Press F6 to insert a point after the selected point\n"..
-		"Press F7 to toggle close loop\n"..
+	print("\nPress F5 to start/stop placing\n" ..
+		"Press E to confirm position or select a previous point\n" ..
+		"Press F4 to delete a point/all points if none are selected\n" ..
+		"Press F6 to insert a point after the selected point\n" ..
+		"Press F7 to toggle close loop\n" ..
 		"Press F2/F3 to print as Vec2s/Vec3s\n")
 end)
 

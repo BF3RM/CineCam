@@ -1,10 +1,13 @@
 ---@class CineCam
+---@overload fun():CineCam
 CineCam = class 'CineCam'
 
 require "__shared/Config"
 require "__shared/Util/MathExtensions"
 require "__shared/Util/StringExtensions"
 require "__shared/Util/Logger"
+
+require "modsettings"
 
 ---@type Logger
 local m_Logger = Logger("CineCam", false)
@@ -25,13 +28,14 @@ local CameraMode = {
 ---Returns the current FOV of the local player
 ---@return number
 local function _GetFieldOfView()
-	---@type GameRenderSettings|DataContainer|table
 	local s_GameRenderSettings = ResourceManager:GetSettings("GameRenderSettings")
 
 	if s_GameRenderSettings ~= nil then
+		---@type GameRenderSettings
 		s_GameRenderSettings = GameRenderSettings(s_GameRenderSettings)
 	else
 		-- Just in case if we don't get the settings
+		---@type table
 		s_GameRenderSettings = { fovMultiplier = 1.36 }
 	end
 
@@ -115,6 +119,14 @@ function CineCam:ResetVars()
 
 	self.m_PlaybackKey = 1
 	self.m_FinalSpeed = 1
+
+	self.m_RSMD = SettingsManager:GetSetting("RSMD")
+	self.m_RSMI = SettingsManager:GetSetting("RSMI")
+	self.m_Toggle_CineCam = SettingsManager:GetSetting("Toggle_CineCam")
+	self.m_FOVD = SettingsManager:GetSetting("FOVD")
+	self.m_FOVI = SettingsManager:GetSetting("FOVI")
+	self.m_MoveUp = SettingsManager:GetSetting("MoveUp")
+	self.m_MoveDown = SettingsManager:GetSetting("MoveDown")
 end
 
 ---@param p_Soldier SoldierEntity
@@ -161,18 +173,18 @@ function CineCam:OnCreateChatMessage(p_HookCtx, p_Message, p_Channel, p_PlayerId
 		local s_Players = self:FindPlayersByString(s_Parts[2])
 
 		if s_Players == nil then
-			m_Logger:Warning('Couldn\'t find alive players with name '.. s_Parts[2])
+			m_Logger:Warning('Couldn\'t find alive players with name ' .. s_Parts[2])
 			return
 		end
 
 		local s_Player = s_Players[1]
 
 		if s_Player == nil or s_Player.soldier == nil then
-			m_Logger:Warning('Couldn\'t find alive player with name '.. s_Parts[2])
+			m_Logger:Warning('Couldn\'t find alive player with name ' .. s_Parts[2])
 			return
 		end
 
-		m_Logger:Write('Attaching to player '.. s_Parts[2])
+		m_Logger:Write('Attaching to player ' .. s_Parts[2])
 		self.m_IsAttached = true
 		self.m_AttachedPlayerName = s_Player.name
 		self.m_AttachedPlayerPos = s_Player.soldier.transform.trans:Clone()
@@ -201,7 +213,7 @@ end
 ---@return Player[]
 function CineCam:FindPlayersByString(p_String)
 	local s_Players = PlayerManager:GetPlayers()
-	local s_PossiblePlayers = { }
+	local s_PossiblePlayers = {}
 
 	for _, player in pairs(s_Players) do
 		local playerNameUpper = player.name:upper()
@@ -221,16 +233,16 @@ end
 
 ---@param p_Mode CameraMode|integer
 function CineCam:SetCameraMode(p_Mode)
-    if self.m_Mode == CameraMode.Editor then
-        self:UpdateCineCamVars()
-    end
+	if self.m_Mode == CameraMode.Editor then
+		self:UpdateCineCamVars()
+	end
 
-	m_Logger:Write("Setting CineCam mode to "..p_Mode)
-    self.m_Mode = p_Mode
+	m_Logger:Write("Setting CineCam mode to " .. p_Mode)
+	self.m_Mode = p_Mode
 end
 
 function CineCam:GetCameraMode()
-    return self.m_Mode
+	return self.m_Mode
 end
 
 ---@param p_FOV number
@@ -244,24 +256,22 @@ function CineCam:SetCameraFOV(p_FOV)
 	self.m_CameraData.fov = p_FOV
 end
 
----@return number|nil
+---@return number
 function CineCam:GetCameraFOV()
-	if self.m_CameraData then
-		return self.m_CameraData.fov
-	end
+	return self.m_CameraData.fov
 end
 
 function CineCam:UpdateCineCamVars()
-    local s_Yaw, s_Pitch, s_Roll = m_RotationHelper:GetYPRFromLUF(
-			self.m_CameraData.transform.left,
-			self.m_CameraData.transform.up,
-			self.m_CameraData.transform.forward)
+	local s_Yaw, s_Pitch, s_Roll = m_RotationHelper:GetYPRFromLUF(
+		self.m_CameraData.transform.left,
+		self.m_CameraData.transform.up,
+		self.m_CameraData.transform.forward)
 
 	-- negative yaw because cam is reversed
 	self.m_CameraYaw = -s_Yaw
 	self.m_CameraPitch = s_Pitch
 
-    self.m_LastTransform = self.m_CameraData.transform.trans
+	self.m_LastTransform = self.m_CameraData.transform
 end
 
 ---@param p_HookCtx HookContext
@@ -283,9 +293,9 @@ function CineCam:OnUpdateInputHook(p_HookCtx, p_Cache, p_DeltaTime)
 			y = y * 0.60
 		end
 
-		self.m_CameraYaw   = self.m_CameraYaw - x
-		self.m_CameraPitch = self.m_CameraPitch - y
-		self.m_CameraRoll = 0
+		self.m_CameraYaw         = self.m_CameraYaw - x
+		self.m_CameraPitch       = self.m_CameraPitch - y
+		self.m_CameraRoll        = 0
 		self.m_Rotation.rotation = Quat(Vec3(self.m_CameraYaw, 0, -self.m_CameraPitch))
 	end
 end
@@ -345,7 +355,7 @@ function CineCam:Enable()
 		self.m_CameraData.transform = self.m_LastTransform
 	end
 
-    self:SetCameraMode(CameraMode.CineCam)
+	self:SetCameraMode(CameraMode.CineCam)
 	self:TakeControl()
 end
 
@@ -353,7 +363,7 @@ function CineCam:Disable()
 	self:SetInputRestriction(false)
 
 	self.m_LastTransform = self.m_CameraData.transform
-    self:SetCameraMode(CameraMode.FirstPerson)
+	self:SetCameraMode(CameraMode.FirstPerson)
 	self:ReleaseControl()
 	m_Logger:Write("Camera disabled")
 end
@@ -376,17 +386,17 @@ end
 ---@return Vec3
 function CineCam:RotateX(p_Transform, p_Vector)
 	return Vec3(
-			p_Transform.left.x * p_Vector.x,
-			p_Transform.left.y * p_Vector.x,
-			p_Transform.left.z * p_Vector.x
+		p_Transform.left.x * p_Vector.x,
+		p_Transform.left.y * p_Vector.x,
+		p_Transform.left.z * p_Vector.x
 	) + Vec3(
-			p_Transform.up.x * p_Vector.y,
-			p_Transform.up.y * p_Vector.y,
-			p_Transform.up.z * p_Vector.y
+		p_Transform.up.x * p_Vector.y,
+		p_Transform.up.y * p_Vector.y,
+		p_Transform.up.z * p_Vector.y
 	) + Vec3(
-			p_Transform.forward.x * p_Vector.z,
-			p_Transform.forward.y * p_Vector.z,
-			p_Transform.forward.z * p_Vector.z
+		p_Transform.forward.x * p_Vector.z,
+		p_Transform.forward.y * p_Vector.z,
+		p_Transform.forward.z * p_Vector.z
 	)
 end
 
@@ -396,6 +406,7 @@ function CineCam:Play()
 end
 
 function CineCam:Stop()
+	m_Logger:Write("Stop Playing")
 	self.m_Playing = false
 end
 
@@ -403,12 +414,12 @@ end
 function CineCam:OnUpdateInput(p_DeltaTime)
 	local s_Step = 1
 
-	if InputManager:WentKeyDown(InputDeviceKeys.IDK_PageDown) then
+	if InputManager:WentKeyDown(self.m_RSMD.value) then
 		if self.m_RotationSpeedMultiplier > 1 then
 			m_Logger:Write("Multiplier set to: " .. self.m_RotationSpeedMultiplier)
 			self.m_RotationSpeedMultiplier = self.m_RotationSpeedMultiplier - s_Step
 		end
-	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_PageUp) then
+	elseif InputManager:WentKeyDown(self.m_RSMI.value) then
 		m_Logger:Write("Multiplier set to: " .. self.m_RotationSpeedMultiplier)
 		self.m_RotationSpeedMultiplier = self.m_RotationSpeedMultiplier + s_Step
 	end
@@ -417,7 +428,7 @@ function CineCam:OnUpdateInput(p_DeltaTime)
 		self:Play()
 	end
 
-	if InputManager:WentKeyDown(InputDeviceKeys.IDK_F2) then
+	if InputManager:WentKeyDown(self.m_Toggle_CineCam.value) then
 		if self.m_Mode == CameraMode.FirstPerson then
 			--if not RM_DEV.IS_DEBUG_MODE then
 			--	return
@@ -444,10 +455,10 @@ function CineCam:OnUpdateInput(p_DeltaTime)
 		self:Stop()
 	end
 
-	if InputManager:WentKeyDown(InputDeviceKeys.IDK_ArrowUp) then
+	if InputManager:WentKeyDown(self.m_FOVI.value) then
 		self:SetCameraFOV(self:GetCameraFOV() + 5)
 		m_Logger:Write("FOV set to: " .. self:GetCameraFOV())
-	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_ArrowDown) then
+	elseif InputManager:WentKeyDown(self.m_FOVD.value) then
 		self:SetCameraFOV(self:GetCameraFOV() - 5)
 		m_Logger:Write("FOV set to: " .. self:GetCameraFOV())
 	end
@@ -464,9 +475,9 @@ function CineCam:OnUpdateInput(p_DeltaTime)
 
 	if InputManager:WentKeyDown(InputDeviceKeys.IDK_F3) and InputManager:WentKeyDown(InputDeviceKeys.IDK_LeftCtrl) then
 		m_Logger:Write("Resetting camera")
-		self.m_CameraData.transform.left = Vec3(1,0,0)
-		self.m_CameraData.transform.up = Vec3(0,1,0)
-		self.m_CameraData.transform.forward = Vec3(0,0,1)
+		self.m_CameraData.transform.left = Vec3.left
+		self.m_CameraData.transform.up = Vec3.up
+		self.m_CameraData.transform.forward = Vec3.forward
 		self.m_CameraData.fov = _GetFieldOfView()
 		self.m_CameraYaw = 0.0
 		self.m_CameraPitch = 0.0
@@ -529,14 +540,14 @@ function CineCam:UpdateCameraControls(p_DeltaTime)
 	local s_MoveY = 0.0
 	local s_MoveZ = -InputManager:GetLevel(InputConceptIdentifiers.ConceptMoveFB)
 
-	if InputManager:IsKeyDown(InputDeviceKeys.IDK_E) then
+	if InputManager:IsKeyDown(self.m_MoveUp.value) then
 		s_MoveY = 1.0
-	elseif InputManager:IsKeyDown(InputDeviceKeys.IDK_Q) then
+	elseif InputManager:IsKeyDown(self.m_MoveDown.value) then
 		s_MoveY = -1.0
 	end
 
 	--- When moving diagonally lower axis direction speeds.
-	if s_MoveX ~= 0.0 and s_MoveZ ~= 0.0  then
+	if s_MoveX ~= 0.0 and s_MoveZ ~= 0.0 then
 		s_MoveX = s_MoveX * 0.7071 -- cos(45º)
 		s_MoveZ = s_MoveZ * 0.7071 -- cos(45º)
 	end
@@ -563,13 +574,13 @@ function CineCam:UpdateCineCamera(p_DeltaTime)
 	local s_Transform = self.m_CameraData.transform
 
 	if not self.m_Smooth then
-		s_Transform.forward = Vec3( math.sin(self.m_CameraYaw)*math.cos(self.m_CameraPitch),
-				math.sin(self.m_CameraPitch),
-				math.cos(self.m_CameraYaw)*math.cos(self.m_CameraPitch))
+		s_Transform.forward = Vec3(math.sin(self.m_CameraYaw) * math.cos(self.m_CameraPitch),
+			math.sin(self.m_CameraPitch),
+			math.cos(self.m_CameraYaw) * math.cos(self.m_CameraPitch))
 
-		s_Transform.up = Vec3( -(math.sin(self.m_CameraYaw)*math.sin(self.m_CameraPitch)),
-				math.cos(self.m_CameraPitch),
-				-(math.cos(self.m_CameraYaw)*math.sin(self.m_CameraPitch)) )
+		s_Transform.up = Vec3(-(math.sin(self.m_CameraYaw) * math.sin(self.m_CameraPitch)),
+			math.cos(self.m_CameraPitch),
+			-(math.cos(self.m_CameraYaw) * math.sin(self.m_CameraPitch)))
 
 		s_Transform.left = s_Transform.forward:Cross(Vec3(s_Transform.up.x * -1, s_Transform.up.y * -1, s_Transform.up.z * -1))
 	else
